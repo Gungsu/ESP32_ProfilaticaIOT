@@ -369,7 +369,7 @@ void setup()
 {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(SERIAL_LOGGER_BAUD_RATE);
-  //while (!connectWifibySerial())
+  while (!connectWifibySerial())
 
   set_logging_function(logging_function);
 
