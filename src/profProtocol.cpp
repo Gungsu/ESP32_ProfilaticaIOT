@@ -171,6 +171,7 @@ uint8_t SerialProfisy::sizeVle(char *vle)
             return cont;
         }
     }
+    return 0;
 }
 
 uint16_t SerialProfisy::azureReadAndSendprofsys(char *cmd, char *vle) {

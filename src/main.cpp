@@ -471,6 +471,7 @@ static void connect_to_wifi()
   uint8_t cont = 0;
   while (WiFi.status() != WL_CONNECTED)
   {
+    send_device_info = false;
     delay(500);
     Serial.print(WiFi.status());
     if (cont > 15)
