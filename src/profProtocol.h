@@ -8,6 +8,7 @@ class SerialProfisy {
         char arraytotal[150];
         uint8_t lengArray;
         bool existeValor = false;
+        bool sendToazure = false;
 
         char usuario[25], nomedoproduto[25];
         int32_t Concetracao;

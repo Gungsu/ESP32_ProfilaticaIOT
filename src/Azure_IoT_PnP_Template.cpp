@@ -103,7 +103,7 @@ static time_t last_telemetry_send_time = INDEFINITE_TIME;
 static bool led1_on = false;
 static bool led2_on = false;
 
-int enviardado;
+bool enviardado = true; 
 
 //static time_t last_telemetry_send_time2 = INDEFINITE_TIME;
 /* --- Function Prototypes --- */
@@ -139,8 +139,9 @@ void azure_pnp_set_telemetry_frequency(size_t frequency_in_seconds)
 
 int azure_pnp_send_telemetry(azure_iot_t* azure_iot) //serial
 {
+  
   _az_PRECONDITION_NOT_NULL(azure_iot);
-
+  
   time_t now = time(NULL);
 
   if (now == INDEFINITE_TIME)
@@ -148,12 +149,12 @@ int azure_pnp_send_telemetry(azure_iot_t* azure_iot) //serial
     LogError("Failed getting current time for controlling telemetry.");
     return RESULT_ERROR;
   }
-  else if (enviardado == 1)
+  else if (leituraProfsys.sendToazure)
   {
     size_t payload_size;
 
     last_telemetry_send_time = now;
-    enviardado = 0;
+    leituraProfsys.sendToazure = false;
 
     if (generate_telemetry_payload(data_buffer, DATA_BUFFER_SIZE, &payload_size) != RESULT_OK)
     {
@@ -178,25 +179,24 @@ int azure_pnp_send_telemetry(azure_iot_t* azure_iot) //serial
   /***************************************************
    * Controle da serial no arquivo profProtocol.cpp  *
    ***************************************************/
-
   return RESULT_OK;
-}
+  }
 
 int azure_pnp_send_device_info(azure_iot_t* azure_iot, uint32_t request_id)
 {
-  _az_PRECONDITION_NOT_NULL(azure_iot);
+    _az_PRECONDITION_NOT_NULL(azure_iot);
 
-  int result;
-  size_t length;
+    int result;
+    size_t length;
 
-  result = generate_device_info_payload(
-      &azure_iot->iot_hub_client, data_buffer, DATA_BUFFER_SIZE, &length);
-  EXIT_IF_TRUE(result != RESULT_OK, RESULT_ERROR, "Failed generating telemetry payload.");
+    result = generate_device_info_payload(
+        &azure_iot->iot_hub_client, data_buffer, DATA_BUFFER_SIZE, &length);
+    EXIT_IF_TRUE(result != RESULT_OK, RESULT_ERROR, "Failed generating telemetry payload.");
 
-  result = azure_iot_send_properties_update(
-      azure_iot, request_id, az_span_create(data_buffer, length));
-  EXIT_IF_TRUE(result != RESULT_OK, RESULT_ERROR, "Failed sending reported properties update.");
-
+    result = azure_iot_send_properties_update(
+        azure_iot, request_id, az_span_create(data_buffer, length));
+    EXIT_IF_TRUE(result != RESULT_OK, RESULT_ERROR, "Failed sending reported properties update.");
+    leituraProfsys.sendToazure = false;
   return RESULT_OK;
 }
 

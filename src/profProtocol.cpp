@@ -138,6 +138,7 @@ void SerialProfisy::atualizarDadosParaAzure(){
         strcpy(usuario,vl.c_str());
         Serial.println(this->usuario);
         this->existeValor = false;
+        this->sendToazure = true;
     }
     else if (toCompar == "PU")
     {
