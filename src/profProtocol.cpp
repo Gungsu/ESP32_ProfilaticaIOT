@@ -2,13 +2,22 @@
 
 HardwareSerial Serialprofisys(1);
 
+#define calibracaofluxometro 0
+#define mudanca1 1
+#define mudanca2 2
+#define mudanca3 3
+
 void initSerialProf()
 {
     Serialprofisys.begin(9600, SERIAL_8N1, 27, 26);
 }
 
-void enviarResposta(char *array, uint16_t leng) {
-    Serialprofisys.write(array);
+void enviarResposta(char *cmd, char *arrayvl, uint16_t vl_leng)
+{
+    Serialprofisys.write(cmd);
+    Serialprofisys.write(':');
+    Serialprofisys.write(arrayvl,vl_leng-1);
+    Serialprofisys.println();
 }
 
 void timestamp2Ser(time_t time)
@@ -37,22 +46,22 @@ void fw(uint8_t x)
     if (x == 0)
     {
         char toSend[] = "FW:0\n";
-        enviarResposta(toSend, 6);
+        Serialprofisys.print(toSend);
     } // WIFI WAIT SSID & PASS
     else if (x == 1)
     {
         char toSend[] = "FW:1\n";
-        enviarResposta(toSend, 6);
+        Serialprofisys.print(toSend);
     } // WIFI ON
     else if (x == 2)
     {
         char toSend[] = "FW:2\n";
-        enviarResposta(toSend, 6);
+        Serialprofisys.print(toSend);
     } // WIFI OFF
     else if (x == 3)
     {
         char toSend[] = "FW:3\n";
-        enviarResposta(toSend, 6);
+        Serialprofisys.print(toSend);
     } // AZURE CONNECTED
 }
 
@@ -154,3 +163,57 @@ void SerialProfisy::atualizarDadosParaAzure(){
     }
 }
 
+uint8_t SerialProfisy::sizeVle(char *vle)
+{
+    uint8_t cont;
+    for(cont=1;cont<20;cont++){
+        if (vle[cont] == '"'){
+            return cont;
+        }
+    }
+}
+
+uint16_t SerialProfisy::azureReadAndSendprofsys(char *cmd, char *vle) {
+    uint8_t pos;
+    char cmdH[4] = {'\0'};
+    int x;
+    for (int i = 0; i < 4; i++)
+    {
+        x = strcmp(cmdNameList[i], cmd);
+        if (x == 0)
+        {
+            pos = uint8_t(i);
+            break;
+        }
+    }
+    switch (pos)
+    {
+        case calibracaofluxometro:
+            strncpy(cmdH,"CF",sizeof(cmdH)-1);
+            enviarResposta(cmdH,vle+1,this->sizeVle(vle));
+            return 202;
+            break;
+
+        case mudanca1:
+            strncpy(cmdH, "D1", sizeof(cmdH) - 1);
+            enviarResposta(cmdH, vle + 1, this->sizeVle(vle));
+            return 202;
+            break;
+
+        case mudanca2:
+            strncpy(cmdH, "D2", sizeof(cmdH) - 1);
+            enviarResposta(cmdH, vle + 1, this->sizeVle(vle));
+            return 202;
+            break;
+
+        case mudanca3:
+            strncpy(cmdH, "D3", sizeof(cmdH) - 1);
+            enviarResposta(cmdH, vle + 1, this->sizeVle(vle));
+            return 202;
+            break;
+
+        default:
+            return 404;
+            break;
+    }
+}

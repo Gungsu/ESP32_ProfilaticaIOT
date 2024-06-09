@@ -38,24 +38,12 @@
 #define SAMPLE_TOTAL_STORAGE_PROPERTY_VALUE 4096
 #define SAMPLE_TOTAL_MEMORY_PROPERTY_VALUE 8192
 
-#define TELEMETRY_PROP_NAME_TEMPERATURE "temperature"
-#define TELEMETRY_PROP_NAME_HUMIDITY "humidity"
-#define TELEMETRY_PROP_NAME_LIGHT "light"
-#define TELEMETRY_PROP_NAME_PRESSURE "pressure"
 #define TELEMETRY_PROP_NAME_VOLUMEAGUA "VolumeAgua"
 #define TELEMETRY_PROP_NAME_CALIBRACAOFLUXO "valorCalibradoFluxometro"
-#define TELEMETRY_PROP_NAME_MAGNETOMETERX "magnetometerX"
-#define TELEMETRY_PROP_NAME_MAGNETOMETERY "magnetometerY"
-#define TELEMETRY_PROP_NAME_MAGNETOMETERZ "magnetometerZ"
 #define TELEMETRY_PROP_NAME_PITCH "pitch"
 #define TELEMETRY_PROP_NAME_ROLL "roll"
-#define TELEMETRY_PROP_NAME_ACCELEROMETERX "accelerometerX"
-#define TELEMETRY_PROP_NAME_ACCELEROMETERY "accelerometerY"
-#define TELEMETRY_PROP_NAME_ACCELEROMETERZ "accelerometerZ"
 #define TELEMETRY_PROP_NAME_CONCETRACAO "concetracao"
 
-static az_span COMMAND_NAME_TOGGLE_LED_1 = AZ_SPAN_FROM_STR("ToggleLed1");
-static az_span COMMAND_NAME_TOGGLE_LED_2 = AZ_SPAN_FROM_STR("ToggleLed2");
 static az_span COMMAND_NAME_DISPLAY_TEXT = AZ_SPAN_FROM_STR("mudanca");
 static az_span COMMAND_NAME_DISPLAY_TEX2 = AZ_SPAN_FROM_STR("calibracaofluxometro");
 
@@ -91,6 +79,7 @@ uint8_t trycont = 0;
 bool sendToPic;
 bool pnpInit = false;
 SerialProfisy leituraProfsys;
+char *receivedAzure;
 
 /* --- Data --- */
 #define DATA_BUFFER_SIZE 1024
@@ -205,50 +194,18 @@ int azure_pnp_handle_command_request(azure_iot_t* azure_iot, command_request_t c
   _az_PRECONDITION_NOT_NULL(azure_iot);
 
   uint16_t response_code;
+  char cmdName[25];
+  char value[20];
+  az_span_to_str(cmdName, 25, command.command_name);
+  az_span_to_str(value, 20, command.payload);
+  
+  response_code = leituraProfsys.azureReadAndSendprofsys(cmdName,value);
 
-  if (az_span_is_content_equal(command.command_name, COMMAND_NAME_TOGGLE_LED_1))
-  {
-    led1_on = !led1_on;
-    LogInfo("LED 1 state: %s", (led1_on ? "ON" : "OFF"));
-    response_code = COMMAND_RESPONSE_CODE_ACCEPTED;
-  }
-  else if (az_span_is_content_equal(command.command_name, COMMAND_NAME_TOGGLE_LED_2))
-  {
-    led2_on = !led2_on;
-    LogInfo("LED 2 state: %s", (led2_on ? "ON" : "OFF"));
-    response_code = COMMAND_RESPONSE_CODE_ACCEPTED;
-  }
-  else if (az_span_is_content_equal(command.command_name, COMMAND_NAME_DISPLAY_TEXT))
-  {
-    // The payload comes surrounded by quotes, so to remove them we offset the payload by 1 and its
-    // size by 2.
-    LogInfo(
-        "Dados de dosagem: %.*s", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1);
-        //sprintf(resp, "D1:%.*s\n", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1);
-        //enviarResposta(resp,256);
-        //Serialprofisys.printf("D1:%.*s\n", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1);
-        response_code = COMMAND_RESPONSE_CODE_ACCEPTED;
-  }
-  else if (az_span_is_content_equal(command.command_name, COMMAND_NAME_DISPLAY_TEX2))
-  {
-    // The payload comes surrounded by quotes, so to remove them we offset the payload by 1 and its
-    // size by 2.
-    LogInfo(
-      "Calibracao Flux: %.*s", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1
-    );
-    //sprintf(resp, "CF:%.*s\n", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1);
-    //enviarResposta(resp, 256);
-    //Serialprofisys.printf("CF:%.*s\n", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1);
-    response_code = COMMAND_RESPONSE_CODE_ACCEPTED;
-  }
-  else
-  {
+  if (response_code == COMMAND_RESPONSE_CODE_REJECTED){
     LogError(
         "Command not recognized (%.*s).",
         az_span_size(command.command_name),
-        az_span_ptr(command.command_name)
-    );
-        response_code = COMMAND_RESPONSE_CODE_REJECTED;
+        az_span_ptr(command.command_name));
   }
 
   return azure_iot_send_command_response(azure_iot, command.request_id, response_code, AZ_SPAN_EMPTY);
