@@ -234,41 +234,6 @@ int azure_pnp_handle_properties_update(
 }
 
 /* --- Internal Functions --- */
-static float simulated_get_temperature() { return rand() % 21; }
-
-static float simulated_get_humidity() { return 88.0; }
-
-static float simulated_get_ambientLight() { return 700.0; }
-
-static void simulated_get_pressure_altitude(float* pressure, float* altitude)
-{
-  *pressure = 55.0;
-  *altitude = rand() % 100;
-}
-
-static void simulated_get_magnetometer(
-    int32_t* magneticFieldX,
-    int32_t* magneticFieldY,
-    int32_t* magneticFieldZ)
-{
-  *magneticFieldX = 2000;
-  *magneticFieldY = 3000;
-  *magneticFieldZ = 4000;
-}
-
-static void simulated_get_pitch_roll_accel(
-    int32_t* pitch,
-    int32_t* roll,
-    int32_t* accelerationX,
-    int32_t* accelerationY,
-    int32_t* accelerationZ)
-{
-  *pitch = 30;
-  *roll = 90;
-  *accelerationX = rand() % 33;
-  *accelerationY = rand() % 44;
-  *accelerationZ = rand() % 55;
-}
 
 static int generate_telemetry_payload(
     uint8_t* payload_buffer,
@@ -565,7 +530,7 @@ static int consume_properties_and_generate_response(
   return RESULT_OK;
 }
 
-//************************************ MRD Funcitions *************************/
+//********************* MRD Funcitions *************************/
 bool connectWifibySerial()
 {
   if (!pnpInit)
