@@ -15,6 +15,7 @@ class ConnectWifiByDataHtml {
         String resp;
         bool existDataFile();
         void readSSID();
+        void updateListSSID();
         ConnectWifiByDataHtml()
         {
             SPIFFS.begin(true);

@@ -478,16 +478,7 @@ static void connect_to_wifi()
   delay(500);
   if (connectByHtml.existDataFile()) {
     WiFi.mode(WIFI_STA);
-    connectByHtml.numBssid = WiFi.scanNetworks();
-    connectByHtml.resp = "<option value = ''>Select SSID</ option>";
-    for (uint8_t i = 0; i < connectByHtml.numBssid; i++)
-    {
-      connectByHtml.resp += "<option value = '";
-      connectByHtml.resp += WiFi.SSID(i);
-      connectByHtml.resp += "'>";
-      connectByHtml.resp += WiFi.SSID(i);
-      connectByHtml.resp += "</ option>";
-    }
+    connectByHtml.updateListSSID();
     //Serial.println(connectByHtml.resp);
     WiFi.begin(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
     uint8_t cont = 0;
@@ -504,7 +495,7 @@ static void connect_to_wifi()
         while(!readNFileValue()) {
           x++;
           if(x>150){
-            Serial.print("f");
+            Serial.print("x");
             x=0;
           }
         }

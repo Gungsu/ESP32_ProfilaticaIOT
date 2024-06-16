@@ -56,46 +56,6 @@ void writeFile(fs::FS &fs, const char *path, const char *message)
     file.close();
 }
 
-String processor(const String &var)
-{
-    if (var == "LISTA_WIFI")
-    {
-        String resp = "<option value = 'w1'></ option> <option value = 'w2'> Saab</ option><option value = 'w3'> Fiat</ option><option value = 'w4'> Audi</ option><option value = 'w5'> Audi</ option>";
-        return resp;
-    }
-    else if (var == "inputInt")
-    {
-        return readFile(SPIFFS, "/inputInt.txt");
-    }
-    else if (var == "inputFloat")
-    {
-        return readFile(SPIFFS, "/inputFloat.txt");
-    }
-    else if (var == "index_html") {
-        return readFile(SPIFFS, "/index.html");
-    }
-    return String();
-}
-
-void assignFromIndex(String &targetString, const String &newString, int startIndex)
-{
-    // Verifica se o índice inicial é válido
-    if (startIndex < 0 || startIndex >= targetString.length())
-    {
-        return; // Retorna se o índice estiver fora dos limites
-    }
-
-    // Extrai a subcadeia da nova string a partir do índice inicial
-    String subString = newString.substring(startIndex);
-
-    // Atribui a subcadeia à variável String original a partir do índice inicial
-    targetString.setCharAt(startIndex, subString[0]);
-    for (int i = 1; i < subString.length(); i++)
-    {
-        targetString[startIndex + i] = subString[i];
-    }
-}
-
 String editFile(fs::FS &fs, const char *path)
 {
     // Serial.printf("Reading file: %s\r\n", path);
@@ -112,7 +72,6 @@ String editFile(fs::FS &fs, const char *path)
     }
     file.close();
     fileContent.replace("%LISTA_WIFI%", respH);
-    // Serial.println(fileContent);
     return fileContent;
 }
 
@@ -168,7 +127,6 @@ void htmlSetup() {
                       char payload[128];
                       serializeJson(doc, payload);
                       writeFile(SPIFFS, "/ssid_conf.json", payload);
-                      delay(50);
                       WiFi.disconnect();
                   }
                   else
@@ -181,13 +139,10 @@ void htmlSetup() {
               });
     server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                // String ssid,ssid_pass;
 
-                // html = readFile(SPIFFS, "/confWifi.html");
-                // request->send(200, "text/html", html);
                 html = editFile(SPIFFS,"/confWifi.html");
                 request->send(200, "text/html", html);
-                //request->send(200, "text/html", index_html);
+
                 });
     server.on("/azure", HTTP_GET, [](AsyncWebServerRequest *request)
               { 
@@ -209,7 +164,6 @@ bool ConnectWifiByDataHtml::consultExist(fs::FS &fs, const char *path) {
 
 bool ConnectWifiByDataHtml::existDataFile()
 {
-    respH = this->resp;
     if (consultExist(SPIFFS, "/ssid_conf.json")) {
         String values = readFile(SPIFFS, "/ssid_conf.json");
         JsonDocument doc;
@@ -250,4 +204,18 @@ bool readNFileValue() {
         return true;
     }
     return false;
+}
+
+void ConnectWifiByDataHtml::updateListSSID() {
+    this->numBssid = WiFi.scanNetworks();
+    this->resp = "<option value = ''>Select SSID</ option>";
+    for (uint8_t i = 0; i < this->numBssid; i++)
+    {
+        this->resp += "<option value = '";
+        this->resp += WiFi.SSID(i);
+        this->resp += "'>";
+        this->resp += WiFi.SSID(i);
+        this->resp += "</ option>";
+    }
+    respH = this->resp;
 }
