@@ -133,7 +133,7 @@
             letter-spacing: 1px;
             text-align: center;
         }
-        input {
+        input, select {
             width: 100%;
             margin-bottom: 10px;
             background: rgba(0, 0, 0, 0.3);
@@ -199,7 +199,10 @@
     <div class="login">
         <h1>Profisys DataBase v0.1</h1>
         <form action="/get">
-            <input type="text" name="ssid" placeholder="SSID" required="required" />
+            <select id="wifilist" name="ssid" placeholder="SSID" required="required">
+                %LISTA_WIFI%
+            </select>
+            <!-- <input type="text" name="ssid2" placeholder="SSID" required="required" /> -->
             <input type="password" name="pass" placeholder="PASSWORD" required="required" />
             <button type="submit" class="btn btn-primary btn-block btn-large" onclick="submitMessage()">Send.</button>
         </form>
@@ -215,4 +218,5 @@
         </form>
     </div>
 </body>
+
 </html>

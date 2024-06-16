@@ -73,8 +73,8 @@ static az_span COMMAND_NAME_DISPLAY_TEX2 = AZ_SPAN_FROM_STR("calibracaofluxometr
   EXIT_IF_TRUE(az_result_failed(azresult), retcode, message, ##__VA_ARGS__)
 
 /* --- MRD Variables ---*/
-String Serial_ssid = "AMAURI-2G";
-String Serial_ssid_pass = "41991617929";
+String Serial_ssid;
+String Serial_ssid_pass;
 uint8_t trycont = 0;
 bool sendToPic;
 bool pnpInit = false;
