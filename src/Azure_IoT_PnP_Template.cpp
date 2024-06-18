@@ -43,8 +43,6 @@
 #define TELEMETRY_PROP_NAME_OPCAODOSAGEM "OpcaoDeDosagem"
 #define TELEMETRY_PROP_NAME_CALIBBOMBA "valorCalibradoBomba"
 #define TELEMETRY_PROP_NAME_CALIBRACAOFLUXO "valorCalibradoFluxometro"
-#define TELEMETRY_PROP_NAME_PITCH "pitch"
-#define TELEMETRY_PROP_NAME_ROLL "roll"
 #define TELEMETRY_PROP_NAME_CONCETRACAO "concetracao"
 
 static az_span COMMAND_NAME_DISPLAY_TEXT = AZ_SPAN_FROM_STR("mudanca");
