@@ -14,6 +14,7 @@ class SerialProfisy {
 
         char usuario[25], nomedoproduto[25];
         int32_t Concetracao;
+
         float volume_de_agua, calibracao_fluxo, volume_de_quimico, opcao_de_dosagem, calibbomba;
 
         char *value[4];
