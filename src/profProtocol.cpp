@@ -134,6 +134,27 @@ void SerialProfisy::atualizarDadosParaAzure(){
         Serial.println(this->volume_de_agua);
         this->existeValor = false;
     }
+    else if (toCompar == "VQ")
+    {
+        Serial.println("VQ");
+        this->volume_de_quimico = atof(vl.c_str());
+        Serial.println(this->volume_de_quimico);
+        this->existeValor = false;
+    }    
+    else if (toCompar == "CB")
+    {
+        Serial.println("CB");
+        this->calibbomba = atof(vl.c_str());
+        Serial.println(this->calibbomba);
+        this->existeValor = false;
+    }
+    else if (toCompar == "OD")
+    {
+        Serial.println("OD");
+        this->opcao_de_dosagem = atof(vl.c_str());
+        Serial.println(this->opcao_de_dosagem);
+        this->existeValor = false;
+    }
     else if (toCompar == "CF")
     {
         Serial.println("CF");
