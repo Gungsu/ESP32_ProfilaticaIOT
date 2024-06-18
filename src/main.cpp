@@ -78,6 +78,8 @@ static uint32_t properties_request_id = 0;
 static bool send_device_info = true;
 static bool azure_initial_connect = false; // Turns true when ESP32 successfully connects to Azure IoT Central for the first time
 
+ConnectWifiByDataHtml connectByHtml;
+
 /* --- MQTT Interface Functions --- */
 /*
  * These functions are used by Azure IoT to interact with whatever MQTT client used by the sample
@@ -369,7 +371,7 @@ void setup()
 {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(SERIAL_LOGGER_BAUD_RATE);
-  while (!connectWifibySerial())
+  //while (!connectWifibySerial())
 
   set_logging_function(logging_function);
 
@@ -461,33 +463,63 @@ static void sync_device_clock_with_ntp_server()
   LogInfo("Time initialized!");
 }
 
+void WifiApSTA() {
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP("PROFSYS_01", "deumaoito", 10, false, 1);
+  Serial.print("AP Created with IP Gateway ");
+  Serial.println(WiFi.softAPIP());
+}
+
 static void connect_to_wifi()
 {
-  LogInfo("Connecting to WIFI wifi_ssid %s", S_ssid());
-  WiFi.mode(WIFI_STA);
   WiFi.disconnect();
-  delay(100);
-  WiFi.begin(S_ssid().c_str(), P_ssid().c_str());
-  uint8_t cont = 0;
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    send_device_info = false;
-    delay(500);
-    Serial.print(WiFi.status());
-    if (cont > 15)
-    {
-      fw(2);
-      while (!connectWifibySerial())
-      cont = 0;
-      WiFi.begin(S_ssid().c_str(), P_ssid().c_str());
-    }
-    cont++;
-  }
+  WifiApSTA();
   htmlSetup();
-  fw(1);
-  Serial.println("");
-
-  LogInfo("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
+  delay(500);
+  if (connectByHtml.existDataFile()) {
+    WiFi.mode(WIFI_STA);
+    connectByHtml.updateListSSID();
+    //Serial.println(connectByHtml.resp);
+    WiFi.begin(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
+    uint8_t cont = 0;
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      send_device_info = false;
+      delay(500);
+      Serial.print(WiFi.status());
+      if (cont > 15 && cont < 25)
+      {
+        fw(2);
+        WifiApSTA();
+        uint8_t x=0;
+        while(!readNFileValue()) {
+          x++;
+          if(x>150){
+            Serial.print("x");
+            x=0;
+          }
+        }
+        connectByHtml.existDataFile();
+        delay(50);
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
+      } else if (cont > 20) {
+        cont = 0;
+        updateConfWif(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
+      }
+      cont++;
+    }
+    updateConfWif(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
+    connectByHtml.existDataFile();
+    fw(1);
+    LogInfo("Connecting to WIFI wifi_ssid %s", connectByHtml.ssid_data_html);
+    LogInfo("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
+    Serial.println("");
+  } else {
+    while (!connectByHtml.existDataFile());
+    //criar
+  }
+  delay(100);
 }
 
 static esp_err_t esp_mqtt_event_handler(esp_mqtt_event_handle_t event)

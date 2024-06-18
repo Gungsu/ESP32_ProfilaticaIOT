@@ -140,7 +140,7 @@ void SerialProfisy::atualizarDadosParaAzure(){
         this->volume_de_quimico = atof(vl.c_str());
         Serial.println(this->volume_de_quimico);
         this->existeValor = false;
-    }    
+    }
     else if (toCompar == "CB")
     {
         Serial.println("CB");

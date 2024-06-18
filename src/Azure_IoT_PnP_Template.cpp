@@ -76,8 +76,8 @@ static az_span COMMAND_NAME_DISPLAY_TEX2 = AZ_SPAN_FROM_STR("calibracaofluxometr
   EXIT_IF_TRUE(az_result_failed(azresult), retcode, message, ##__VA_ARGS__)
 
 /* --- MRD Variables ---*/
-String Serial_ssid = "AMAURI-2G";
-String Serial_ssid_pass = "41991617929";
+String Serial_ssid;
+String Serial_ssid_pass;
 uint8_t trycont = 0;
 bool sendToPic;
 bool pnpInit = false;
@@ -202,7 +202,7 @@ int azure_pnp_handle_command_request(azure_iot_t* azure_iot, command_request_t c
   az_span_to_str(cmdName, 25, command.command_name);
   az_span_to_str(value, 20, command.payload);
 
-    LogInfo("Valores: %.*s", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1);
+  LogInfo("Valores: %.*s", az_span_size(command.payload) - 2, az_span_ptr(command.payload) + 1);
 
   response_code = leituraProfsys.azureReadAndSendprofsys(cmdName,value);
 
@@ -372,6 +372,24 @@ static int generate_device_info_payload(
   az_result rc;
   az_span payload_buffer_span = az_span_create(payload_buffer, payload_buffer_size);
   az_span json_span;
+
+    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(TELEMETRY_PROP_NAME_CALIBBOMBA));
+  EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding calibracao bomba property name to telemetry payload.");
+  rc = az_json_writer_append_double(&jw, leituraProfsys.calibbomba, DOUBLE_DECIMAL_PLACE_DIGITS);
+  EXIT_IF_AZ_FAILED(
+      rc, RESULT_ERROR, "Failed adding calibracao bomba property value to telemetry payload.");
+
+  rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(TELEMETRY_PROP_NAME_VOLUMEQUIMICO));
+  EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding volume_de_quimico property name to telemetry payload.");
+  rc = az_json_writer_append_double(&jw, leituraProfsys.volume_de_quimico, DOUBLE_DECIMAL_PLACE_DIGITS);
+  EXIT_IF_AZ_FAILED(
+      rc, RESULT_ERROR, "Failed adding volume_de_quimico property value to telemetry payload.");
+
+  rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(TELEMETRY_PROP_NAME_OPCAODOSAGEM));
+  EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding opcao_de_dosagem property name to telemetry payload.");
+  rc = az_json_writer_append_double(&jw, leituraProfsys.opcao_de_dosagem, DOUBLE_DECIMAL_PLACE_DIGITS);
+  EXIT_IF_AZ_FAILED(
+      rc, RESULT_ERROR, "Failed adding opcao_de_dosagem property value to telemetry payload.");
 
   rc = az_json_writer_init(&jw, payload_buffer_span, NULL);
   EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed initializing json writer for telemetry.");
