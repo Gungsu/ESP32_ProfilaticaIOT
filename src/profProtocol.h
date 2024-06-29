@@ -2,12 +2,14 @@
 #define PROFPROTOCOL_H
 
 #include "HardwareSerial.h"
+#include "htmlServer.h"
 
 class SerialProfisy {
     public:
         char arraytotal[150];
         char respToProfsys[20];
-        char cmdNameList[4][25] = {"calibracaofluxometro", "mudanca1", "mudanca2","mudanca3"};
+        uint8_t numCmds = 5;
+        char cmdNameList[5][25] = {"calibracaofluxometro", "mudanca1", "mudanca2","mudanca3", "Lote"};
         uint8_t lengArray;
         bool existeValor = false;
         bool sendToazure = false;
@@ -36,6 +38,7 @@ class SerialProfisy {
 
 void initSerialProf();
 void enviarResposta(char *cmd, char *arrayvl, uint16_t leng);
+void enviarResposta(char *cmd, String arrayvl);
 void fw(uint8_t x);
 void timestamp2Ser(time_t x);
 

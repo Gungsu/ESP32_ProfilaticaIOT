@@ -2,10 +2,13 @@
 
 HardwareSerial Serialprofisys(1);
 
-#define calibracaofluxometro 0
-#define mudanca1 1
-#define mudanca2 2
-#define mudanca3 3
+enum {
+    calibracaofluxometro,
+    mudanca1,
+    mudanca2,
+    mudanca3,
+    lotepos
+};
 
 void initSerialProf()
 {
@@ -18,6 +21,13 @@ void enviarResposta(char *cmd, char *arrayvl, uint16_t vl_leng)
     Serialprofisys.write(':');
     Serialprofisys.write(arrayvl,vl_leng-1);
     Serialprofisys.println();
+}
+
+void enviarResposta(char *cmd, String arrayvl)
+{
+    Serialprofisys.write(cmd);
+    Serialprofisys.write(':');
+    Serialprofisys.println(arrayvl);
 }
 
 void timestamp2Ser(time_t time)
@@ -199,7 +209,7 @@ uint16_t SerialProfisy::azureReadAndSendprofsys(char *cmd, char *vle) {
     uint8_t pos;
     char cmdH[4] = {'\0'};
     int x;
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < numCmds; i++)
     {
         x = strcmp(cmdNameList[i], cmd);
         if (x == 0)
@@ -230,6 +240,12 @@ uint16_t SerialProfisy::azureReadAndSendprofsys(char *cmd, char *vle) {
 
         case mudanca3:
             strncpy(cmdH, "D3", sizeof(cmdH) - 1);
+            enviarResposta(cmdH, vle + 1, this->sizeVle(vle));
+            return 202;
+            break;
+
+        case lotepos:
+            strncpy(cmdH, "LO", sizeof(cmdH) - 1);
             enviarResposta(cmdH, vle + 1, this->sizeVle(vle));
             return 202;
             break;

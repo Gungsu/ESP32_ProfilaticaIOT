@@ -371,7 +371,8 @@ void setup()
 {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(SERIAL_LOGGER_BAUD_RATE);
-  //while (!connectWifibySerial())
+  initSerialProf();
+  delay(25);
 
   set_logging_function(logging_function);
 
@@ -385,6 +386,7 @@ void setup()
   azure_iot_start(&azure_iot);
 
   LogInfo("Azure IoT client initialized (state=%d)", azure_iot.state);
+  fw(3);
 }
 
 void loop()
@@ -515,6 +517,8 @@ static void connect_to_wifi()
     LogInfo("Connecting to WIFI wifi_ssid %s", connectByHtml.ssid_data_html);
     LogInfo("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
     Serial.println("");
+    char cmd[] = "IP";
+    enviarResposta(cmd,WiFi.localIP().toString());
   } else {
     while (!connectByHtml.existDataFile());
     //criar
