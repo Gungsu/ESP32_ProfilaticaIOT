@@ -11,6 +11,7 @@ class ConnectWifiByDataHtml {
     public:
         String ssid_data_html, ssid_pass_data_html;
         String nFile;
+        String loteSave;
         uint8_t numBssid;
         String resp;
         bool existDataFile();
@@ -31,6 +32,8 @@ void notFound(AsyncWebServerRequest *request);
 void htmlSetup();
 String processor(const String &var);
 void updateConfWif(String ssid, String pass);
+void updateLote(char *lote, uint16_t leng);
+String readValueFJSON(String val);
 bool readNFileValue();
 
 String readFile(fs::FS &fs, const char *path);

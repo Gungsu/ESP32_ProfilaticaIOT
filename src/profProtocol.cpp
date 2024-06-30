@@ -187,6 +187,14 @@ void SerialProfisy::atualizarDadosParaAzure(){
         Serial.println(this->nomedoproduto);
         this->existeValor = false;
     }
+    else if (toCompar == "LO")
+    {
+        strcpy(this->lote, readValueFJSON("lote").c_str());
+        Serial.print("Lote: ");     
+        Serial.println(lote);
+        enviarResposta("LO",lote,sizeof(lote));
+        this->existeValor = false;
+    }
     else
     {
         Serial.println("Fim de linha");
@@ -247,6 +255,7 @@ uint16_t SerialProfisy::azureReadAndSendprofsys(char *cmd, char *vle) {
         case lotepos:
             strncpy(cmdH, "LO", sizeof(cmdH) - 1);
             enviarResposta(cmdH, vle + 1, this->sizeVle(vle));
+            updateLote(vle+1,this->sizeVle(vle));
             return 202;
             break;
 

@@ -171,9 +171,11 @@ bool ConnectWifiByDataHtml::existDataFile()
         const char *ssid = doc["ssid"];
         const char *pass = doc["pass"];
         const char *nFileH = doc["nFile"];
+        const char *loteH = doc["lote"];
         this->ssid_data_html = String(ssid);
         this->ssid_pass_data_html = String(pass);
         this->nFile = String(nFileH);
+        this->loteSave = String(loteH);
         return true;
     } else {
         return false;
@@ -182,7 +184,9 @@ bool ConnectWifiByDataHtml::existDataFile()
 }
 
 void updateConfWif(String ssid, String pass) {
+    String values = readFile(SPIFFS, "/ssid_conf.json");
     JsonDocument doc;
+    deserializeJson(doc, values);
     doc["ssid"] = ssid;
     doc["pass"] = pass;
     doc["nFile"] = "false";
@@ -190,6 +194,29 @@ void updateConfWif(String ssid, String pass) {
     serializeJson(doc, payload);
     writeFile(SPIFFS, "/ssid_conf.json", payload);
     delay(50);
+}
+
+void updateLote(char *lote, uint16_t lenght) {
+    String values = readFile(SPIFFS, "/ssid_conf.json");
+    JsonDocument doc;
+    deserializeJson(doc, values);
+    char nLote[128];
+    memset(nLote,'\0',sizeof(nLote));
+    strncpy(nLote,lote,lenght-1);
+    doc["lote"] = String(nLote);
+    char payload[128];
+    serializeJson(doc, payload);
+    writeFile(SPIFFS, "/ssid_conf.json", payload);
+    //Serial.println(payload);
+    delay(50);
+}
+
+String readValueFJSON(String val) {
+    String values = readFile(SPIFFS, "/ssid_conf.json");
+    JsonDocument doc;
+    deserializeJson(doc, values);
+    //Serial.println(values);
+    return doc[val];
 }
 
 bool readNFileValue() {
