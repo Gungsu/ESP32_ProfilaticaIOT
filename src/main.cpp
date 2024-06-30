@@ -51,8 +51,8 @@
 #define RESULT_ERROR __LINE__
 
 /* --- Handling iot_config.h Settings --- */
-static const char *wifi_ssid = IOT_CONFIG_WIFI_SSID;
-static const char *wifi_password = IOT_CONFIG_WIFI_PASSWORD;
+//static const char *wifi_ssid = IOT_CONFIG_WIFI_SSID;
+//static const char *wifi_password = IOT_CONFIG_WIFI_PASSWORD;
 
 /* --- Function Declarations --- */
 static void sync_device_clock_with_ntp_server();
@@ -324,6 +324,14 @@ static void on_command_request_received(command_request_t command)
   (void)azure_pnp_handle_command_request(&azure_iot, command);
 }
 
+az_span convert_str(String value) {
+  int length = value.length();
+  char *nKey = new char[length];
+  strcpy(nKey,value.c_str());
+  az_span key = az_span_create_from_str(nKey);
+  return key;
+}
+
 static void configure_azure_iot()
 {
   /*
@@ -344,11 +352,11 @@ static void configure_azure_iot()
 #else
   azure_iot_config.device_certificate = AZ_SPAN_EMPTY;
   azure_iot_config.device_certificate_private_key = AZ_SPAN_EMPTY;
-  azure_iot_config.device_key = AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_KEY);
+  azure_iot_config.device_key = convert_str(connectByHtml.devKey);
 #endif // IOT_CONFIG_USE_X509_CERT
 
-  azure_iot_config.dps_id_scope = AZ_SPAN_FROM_STR(DPS_ID_SCOPE);
-  azure_iot_config.dps_registration_id = AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_ID); // Use Device ID for Azure IoT Central.
+  azure_iot_config.dps_id_scope = convert_str(connectByHtml.scope);
+  azure_iot_config.dps_registration_id = convert_str(connectByHtml.devID); // Use Device ID for Azure IoT Central.
   azure_iot_config.data_buffer = AZ_SPAN_FROM_BUFFER(az_iot_data_buffer);
   azure_iot_config.sas_token_lifetime_in_minutes = MQTT_PASSWORD_LIFETIME_IN_MINUTES;
   azure_iot_config.mqtt_client_interface.mqtt_client_init = mqtt_client_init_function;

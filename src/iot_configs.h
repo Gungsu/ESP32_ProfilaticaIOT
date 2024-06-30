@@ -55,11 +55,11 @@
 #define ESPAMA
 
 #ifdef ESPAMA
-#define DPS_ID_SCOPE "0ne009F0365"
-#define IOT_CONFIG_DEVICE_ID "Prot_Amauri01"
+#define DPS_ID_SCOPE1 "0ne009F0365"
+#define IOT_CONFIG_DEVICE_ID1 "Prot_Amauri01"
 // Use device key if not using certificates
 #ifndef IOT_CONFIG_USE_X509_CERT
-#define IOT_CONFIG_DEVICE_KEY "BDuy8WeaCpnrg0wMuM8bvwulZH+3hJy33MV5Aci8HPk="
+#define IOT_CONFIG_DEVICE_KEY1 "BDuy8WeaCpnrg0wMuM8bvwulZH+3hJy33MV5Aci8HPk="
 #endif // IOT_CONFIG_USE_X509_CERT
 #endif
 

@@ -87,54 +87,59 @@ void htmlSetup() {
     // Send a GET request to <ESP_IP>/get?input1=<inputMessage>
     server.on("/get", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                  String inputMessage;
-                  String inputParam;
-                  // GET input1 value on <ESP_IP>/get?input1=<inputMessage>
-                  if (request->hasParam(PARAM_INPUT_1))
-                  {
-                      inputMessage = request->getParam(PARAM_INPUT_1)->value();
-                      inputParam = PARAM_INPUT_1;
-                      Serial.print(inputMessage);
-                      Serial.print(" ");
-                      Serial.println(inputParam);
-                      inputMessage = request->getParam(PARAM_INPUT_2)->value();
-                      inputParam = PARAM_INPUT_2;
-                      Serial.print(inputMessage);
-                      Serial.print(" ");
-                      Serial.println(inputParam);
-                      inputMessage = request->getParam(PARAM_INPUT_3)->value();
-                      inputParam = PARAM_INPUT_3;
-                      Serial.print(inputMessage);
-                      Serial.print(" ");
-                      Serial.println(inputParam);
-                  }
-                  else if (request->hasParam(PARAM_INPUT_4))
-                  {
-                      inputMessage = request->getParam(PARAM_INPUT_4)->value();
-                      JsonDocument doc;
-                      inputParam = PARAM_INPUT_4;
-                      Serial.print(inputMessage);
-                      Serial.print(" ");
-                      Serial.println(inputParam);
-                      doc["ssid"] = inputMessage;
-                      inputMessage = request->getParam(PARAM_INPUT_5)->value();
-                      inputParam = PARAM_INPUT_5;
-                      Serial.print(inputMessage);
-                      Serial.print(" ");
-                      Serial.println(inputParam);                    
-                      doc["pass"] = inputMessage;
-                      doc["nFile"] = "true";
-                      char payload[128];
-                      serializeJson(doc, payload);
-                      writeFile(SPIFFS, "/ssid_conf.json", payload);
-                      WiFi.disconnect();
-                  }
-                  else
-                  {
-                      inputMessage = "No message sent";
-                      inputParam = "none";
-                  }
-                  request->send(200, "text/html", html);
+                String inputMessage;
+                String inputParam;
+                char payload[256];
+                JsonDocument doc;
+                String fileReJSON = readFile(SPIFFS,"/ssid_conf.json");
+                deserializeJson(doc, fileReJSON);
+                // GET input1 value on <ESP_IP>/get?input1=<inputMessage>
+                if (request->hasParam(PARAM_INPUT_1))
+                {
+                    inputMessage = request->getParam(PARAM_INPUT_1)->value();
+                    inputParam = PARAM_INPUT_1; //ID_SCOPE
+                    Serial.print(inputMessage);
+                    Serial.print(" ");
+                    Serial.println(inputParam);
+                    doc["scope"] = inputMessage;
+                    inputMessage = request->getParam(PARAM_INPUT_2)->value();
+                    inputParam = PARAM_INPUT_2; //IOT_DEVICE_ID
+                    Serial.print(inputMessage);
+                    Serial.print(" ");
+                    Serial.println(inputParam);
+                    doc["devID"] = inputMessage;
+                    inputMessage = request->getParam(PARAM_INPUT_3)->value();
+                    inputParam = PARAM_INPUT_3; //IOT_DEVICE_KEY
+                    Serial.print(inputMessage);
+                    Serial.print(" ");
+                    Serial.println(inputParam);
+                    doc["devKey"] = inputMessage;
+                }
+                else if (request->hasParam(PARAM_INPUT_4))
+                {
+                    inputMessage = request->getParam(PARAM_INPUT_4)->value();
+                    inputParam = PARAM_INPUT_4;
+                    Serial.print(inputMessage);
+                    Serial.print(" ");
+                    Serial.println(inputParam);
+                    doc["ssid"] = inputMessage;
+                    inputMessage = request->getParam(PARAM_INPUT_5)->value();
+                    inputParam = PARAM_INPUT_5;
+                    Serial.print(inputMessage);
+                    Serial.print(" ");
+                    Serial.println(inputParam);                    
+                    doc["pass"] = inputMessage;
+                    doc["nFile"] = "true";
+                    WiFi.disconnect();
+                }
+                else
+                {
+                    inputMessage = "No message sent";
+                    inputParam = "none";
+                }
+                serializeJson(doc, payload);
+                writeFile(SPIFFS, "/ssid_conf.json", payload);
+                request->send(200, "text/html", html);
                   // request->send_P(200, "text/html", index_html, processor);
               });
     server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -151,6 +156,18 @@ void htmlSetup() {
 
     server.onNotFound(notFound);
     server.begin();
+}
+
+void ConnectWifiByDataHtml::readDeviceConf() {
+    JsonDocument doc;
+    String fileReJSON = readFile(SPIFFS,"/ssid_conf.json");
+    deserializeJson(doc, fileReJSON);
+    const char *i1 = doc["scope"];
+    scope = String(i1);
+    const char *i2 = doc["devID"];
+    devID = String(i2);
+    const char *i3 = doc["devKey"];
+    devKey = String(i3);
 }
 
 bool ConnectWifiByDataHtml::consultExist(fs::FS &fs, const char *path) {
@@ -190,7 +207,7 @@ void updateConfWif(String ssid, String pass) {
     doc["ssid"] = ssid;
     doc["pass"] = pass;
     doc["nFile"] = "false";
-    char payload[128];
+    char payload[256];
     serializeJson(doc, payload);
     writeFile(SPIFFS, "/ssid_conf.json", payload);
     delay(50);
@@ -204,7 +221,7 @@ void updateLote(char *lote, uint16_t lenght) {
     memset(nLote,'\0',sizeof(nLote));
     strncpy(nLote,lote,lenght-1);
     doc["lote"] = String(nLote);
-    char payload[128];
+    char payload[256];
     serializeJson(doc, payload);
     writeFile(SPIFFS, "/ssid_conf.json", payload);
     //Serial.println(payload);
@@ -215,7 +232,7 @@ String readValueFJSON(String val) {
     String values = readFile(SPIFFS, "/ssid_conf.json");
     JsonDocument doc;
     deserializeJson(doc, values);
-    //Serial.println(values);
+    Serial.println(values);
     return doc[val];
 }
 

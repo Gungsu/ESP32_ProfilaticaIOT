@@ -12,20 +12,23 @@ class ConnectWifiByDataHtml {
         String ssid_data_html, ssid_pass_data_html;
         String nFile;
         String loteSave;
+        String scope;
+        String devID;
+        String devKey;
         uint8_t numBssid;
         String resp;
         bool existDataFile();
         void readSSID();
         void updateListSSID();
+        void readDeviceConf();
         ConnectWifiByDataHtml()
         {
             SPIFFS.begin(true);
+            readDeviceConf();
         }
 
     private:
         bool consultExist(fs::FS &fs, const char *path);
-    
-    
 };
 
 void notFound(AsyncWebServerRequest *request);
