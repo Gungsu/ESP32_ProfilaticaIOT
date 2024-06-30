@@ -41,5 +41,6 @@ void enviarResposta(char *cmd, char *arrayvl, uint16_t leng);
 void enviarResposta(char *cmd, String arrayvl);
 void fw(uint8_t x);
 void timestamp2Ser(time_t x);
+void saveIP(String myIp);
 
 #endif

@@ -77,6 +77,8 @@ static uint8_t az_iot_data_buffer[AZ_IOT_DATA_BUFFER_SIZE];
 static uint32_t properties_request_id = 0;
 static bool send_device_info = true;
 static bool azure_initial_connect = false; // Turns true when ESP32 successfully connects to Azure IoT Central for the first time
+bool infSendfw3 = false;
+uint8_t contInf = 0;
 
 ConnectWifiByDataHtml connectByHtml;
 
@@ -284,7 +286,7 @@ static int base64_encode(
 static void on_properties_update_completed(uint32_t request_id, az_iot_status status_code)
 {
   LogInfo("Properties update request completed (id=%d, status=%d)", request_id, status_code);
-  fw(3); // fw 3 connected on azure
+  //fw(3); // fw 3 connected on azure
 }
 
 /*
@@ -394,7 +396,6 @@ void setup()
   azure_iot_start(&azure_iot);
 
   LogInfo("Azure IoT client initialized (state=%d)", azure_iot.state);
-  fw(3);
 }
 
 void loop()
@@ -522,11 +523,11 @@ static void connect_to_wifi()
     updateConfWif(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
     connectByHtml.existDataFile();
     fw(1);
+    contInf = 0;
     LogInfo("Connecting to WIFI wifi_ssid %s", connectByHtml.ssid_data_html);
     LogInfo("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
     Serial.println("");
-    char cmd[] = "IP";
-    enviarResposta(cmd,WiFi.localIP().toString());
+    saveIP(WiFi.localIP().toString());
   } else {
     while (!connectByHtml.existDataFile());
     //criar
@@ -603,7 +604,11 @@ static esp_err_t esp_mqtt_event_handler(esp_mqtt_event_handle_t event)
     {
       LogError("azure_iot_mqtt_client_subscribe_completed failed.");
     }
-    //fw(3); // fw 3 connected on azure
+    contInf++;
+    if(!infSendfw3 && contInf==3) {
+      infSendfw3 = !infSendfw3;
+      fw(3); // fw 3 connected on azure
+    }
     break;
   case MQTT_EVENT_UNSUBSCRIBED:
     LogInfo("MQTT topic unsubscribed.");

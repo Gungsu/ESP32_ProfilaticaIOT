@@ -567,50 +567,8 @@ static int consume_properties_and_generate_response(
 }
 
 //************************************ MRD Funcitions *************************/
-bool connectWifibySerial()
-{
-  if (!pnpInit)
-    azure_pnp_init();
-  if (!sendToPic)
-    trycont++;
-  if (!leituraProfsys.lerDadosSerial())
-  {
-    if (!leituraProfsys.existeValor)
-      delay(500);
-    Serial.print("x");
-  }
-  else
-  {
-    leituraProfsys.decodeDadosSerial();
-    String cmd = leituraProfsys.value[0];
-    if (cmd == "SS")
-    {
-      Serial_ssid = leituraProfsys.value[1];
-      Serial_ssid_pass = leituraProfsys.value[2];
-    }
-    leituraProfsys.existeValor = false;
-    return true;
-  }
-  if (trycont > 3 && !sendToPic)
-  {
-    trycont = 0;
-    fw(0);
-    sendToPic = true;
-  }
-  return false;
-};
 
 void azure_pnp_init()
 {
   pnpInit = true;
-}
-
-String S_ssid()
-{
-  return Serial_ssid;
-}
-
-String P_ssid()
-{
-  return Serial_ssid_pass;
 }

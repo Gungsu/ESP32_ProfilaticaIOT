@@ -54,22 +54,12 @@
 
 #define ESPAMA
 
-#ifdef ESPAMA
-#define DPS_ID_SCOPE1 "0ne009F0365"
-#define IOT_CONFIG_DEVICE_ID1 "Prot_Amauri01"
 // Use device key if not using certificates
 #ifndef IOT_CONFIG_USE_X509_CERT
-#define IOT_CONFIG_DEVICE_KEY1 "BDuy8WeaCpnrg0wMuM8bvwulZH+3hJy33MV5Aci8HPk="
 #endif // IOT_CONFIG_USE_X509_CERT
-#endif
 
-#ifdef ESPPROF
-#define DPS_ID_SCOPE "0ne009F0365"
-#define IOT_CONFIG_DEVICE_ID "2cv8jqk9t7d"
 // Use device key if not using certificates
 #ifndef IOT_CONFIG_USE_X509_CERT
-#define IOT_CONFIG_DEVICE_KEY "9lRG59V+AMIN7k82lb30fggdqEW1Eh+/B0vLr2Ksrwk="
-#endif // IOT_CONFIG_USE_X509_CERT
 #endif
 
 // User-agent (url-encoded) provided by the MQTT client to Azure IoT Services.

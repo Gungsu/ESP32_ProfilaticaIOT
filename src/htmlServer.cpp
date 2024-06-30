@@ -114,6 +114,7 @@ void htmlSetup() {
                     Serial.print(" ");
                     Serial.println(inputParam);
                     doc["devKey"] = inputMessage;
+                    WiFi.disconnect();
                 }
                 else if (request->hasParam(PARAM_INPUT_4))
                 {
@@ -232,7 +233,7 @@ String readValueFJSON(String val) {
     String values = readFile(SPIFFS, "/ssid_conf.json");
     JsonDocument doc;
     deserializeJson(doc, values);
-    Serial.println(values);
+    //Serial.println(values);
     return doc[val];
 }
 

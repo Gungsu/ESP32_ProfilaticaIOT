@@ -1,6 +1,7 @@
 #include "profProtocol.h"
 
 HardwareSerial Serialprofisys(1);
+String myIP;
 
 enum {
     calibracaofluxometro,
@@ -13,6 +14,10 @@ enum {
 void initSerialProf()
 {
     Serialprofisys.begin(9600, SERIAL_8N1, 27, 26);
+}
+
+void saveIP(String myIPreceveived) {
+    myIP = myIPreceveived;
 }
 
 void enviarResposta(char *cmd, char *arrayvl, uint16_t vl_leng)
@@ -193,6 +198,13 @@ void SerialProfisy::atualizarDadosParaAzure(){
         Serial.print("Lote: ");     
         Serial.println(lote);
         enviarResposta("LO",lote,sizeof(lote));
+        this->existeValor = false;
+    }
+    else if (toCompar == "IP")
+    {
+        Serial.print("IP: ");     
+        Serial.println(myIP);
+        enviarResposta("IP",myIP);
         this->existeValor = false;
     }
     else
