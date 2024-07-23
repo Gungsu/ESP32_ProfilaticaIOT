@@ -39,7 +39,7 @@ const az_span azure_pnp_get_model_id();
  * invoked.
  * @return       int           0 if the function succeeds, non-zero if any error occurs.
  */
-int azure_pnp_send_device_info(azure_iot_t* azure_iot, uint32_t request_id);
+int azure_pnp_send_device_info(azure_iot_t *azure_iot, uint32_t request_id);
 
 /*
  * @brief     Sets with which minimum frequency this module should send telemetry to Azure IoT
@@ -71,7 +71,7 @@ void azure_pnp_set_telemetry_frequency(size_t frequency_in_seconds);
  *
  * return        int          0 on success, non-zero if any failure occurs.
  */
-int azure_pnp_send_telemetry(azure_iot_t* azure_iot);
+int azure_pnp_send_telemetry(azure_iot_t *azure_iot);
 
 /*
  * @brief     Handles a command when it is received from Azure IoT Central.
@@ -86,7 +86,7 @@ int azure_pnp_send_telemetry(azure_iot_t* azure_iot);
  *
  * return        int                0 on success, non-zero if any failure occurs.
  */
-int azure_pnp_handle_command_request(azure_iot_t* azure_iot, command_request_t command_request);
+int azure_pnp_handle_command_request(azure_iot_t *azure_iot, command_request_t command_request);
 
 /*
  * @brief     Handles a payload with writable properties received from Azure IoT Central.
@@ -104,8 +104,13 @@ int azure_pnp_handle_command_request(azure_iot_t* azure_iot, command_request_t c
  * return        int           0 on success, non-zero if any failure occurs.
  */
 int azure_pnp_handle_properties_update(
-    azure_iot_t* azure_iot,
+    azure_iot_t *azure_iot,
     az_span properties,
     uint32_t request_id);
+
+String S_ssid();
+String P_ssid();
+
+bool connectWifibySerial();
 
 #endif // AZURE_IOT_PNP_TEMPLATE_H

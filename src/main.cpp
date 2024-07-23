@@ -30,7 +30,7 @@
 #include <soc/soc.h>
 
 /* --- Sample-specific Settings --- */
-#define SERIAL_LOGGER_BAUD_RATE 9600
+#define SERIAL_LOGGER_BAUD_RATE 115200
 #define MQTT_DO_NOT_RETAIN_MSG 0
 
 /* --- Time and NTP Settings --- */
@@ -51,8 +51,8 @@
 #define RESULT_ERROR __LINE__
 
 /* --- Handling iot_config.h Settings --- */
-//static const char *wifi_ssid = IOT_CONFIG_WIFI_SSID;
-//static const char *wifi_password = IOT_CONFIG_WIFI_PASSWORD;
+static const char *wifi_ssid = IOT_CONFIG_WIFI_SSID;
+static const char *wifi_password = IOT_CONFIG_WIFI_PASSWORD;
 
 /* --- Function Declarations --- */
 static void sync_device_clock_with_ntp_server();
@@ -77,8 +77,6 @@ static uint8_t az_iot_data_buffer[AZ_IOT_DATA_BUFFER_SIZE];
 static uint32_t properties_request_id = 0;
 static bool send_device_info = true;
 static bool azure_initial_connect = false; // Turns true when ESP32 successfully connects to Azure IoT Central for the first time
-bool infSendfw3 = false;
-uint8_t contInf = 0;
 
 ConnectWifiByDataHtml connectByHtml;
 
@@ -110,13 +108,7 @@ static int mqtt_client_init_function(
   mqtt_config.client_id = (const char *)az_span_ptr(mqtt_client_config->client_id);
   mqtt_config.username = (const char *)az_span_ptr(mqtt_client_config->username);
 
-#ifdef IOT_CONFIG_USE_X509_CERT
-  LogInfo("MQTT client using X509 Certificate authentication");
-  mqtt_config.client_cert_pem = IOT_CONFIG_DEVICE_CERT;
-  mqtt_config.client_key_pem = IOT_CONFIG_DEVICE_CERT_PRIVATE_KEY;
-#else // Using SAS key
   mqtt_config.password = (const char *)az_span_ptr(mqtt_client_config->password);
-#endif
 
   mqtt_config.keepalive = 30;
   mqtt_config.disable_clean_session = 0;
@@ -286,7 +278,7 @@ static int base64_encode(
 static void on_properties_update_completed(uint32_t request_id, az_iot_status status_code)
 {
   LogInfo("Properties update request completed (id=%d, status=%d)", request_id, status_code);
-  //fw(3); // fw 3 connected on azure
+  fw(3); // fw 3 connected on azure
 }
 
 /*
@@ -326,10 +318,11 @@ static void on_command_request_received(command_request_t command)
   (void)azure_pnp_handle_command_request(&azure_iot, command);
 }
 
-az_span convert_str(String value) {
+az_span convert_str(String value)
+{
   int length = value.length();
   char *nKey = new char[length];
-  strcpy(nKey,value.c_str());
+  strcpy(nKey, value.c_str());
   az_span key = az_span_create_from_str(nKey);
   return key;
 }
@@ -347,15 +340,9 @@ static void configure_azure_iot()
   azure_iot_config.iot_hub_fqdn = AZ_SPAN_EMPTY;
   azure_iot_config.device_id = AZ_SPAN_EMPTY;
 
-#ifdef IOT_CONFIG_USE_X509_CERT
-  azure_iot_config.device_certificate = AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_CERT);
-  azure_iot_config.device_certificate_private_key = AZ_SPAN_FROM_STR(IOT_CONFIG_DEVICE_CERT_PRIVATE_KEY);
-  azure_iot_config.device_key = AZ_SPAN_EMPTY;
-#else
   azure_iot_config.device_certificate = AZ_SPAN_EMPTY;
   azure_iot_config.device_certificate_private_key = AZ_SPAN_EMPTY;
   azure_iot_config.device_key = convert_str(connectByHtml.devKey);
-#endif // IOT_CONFIG_USE_X509_CERT
 
   azure_iot_config.dps_id_scope = convert_str(connectByHtml.scope);
   azure_iot_config.dps_registration_id = convert_str(connectByHtml.devID); // Use Device ID for Azure IoT Central.
@@ -381,15 +368,16 @@ void setup()
 {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(SERIAL_LOGGER_BAUD_RATE);
-  initSerialProf();
-  delay(25);
+  //while (!connectWifibySerial())
 
   set_logging_function(logging_function);
+  
+  connectByHtml.readDeviceConf();
 
   connect_to_wifi();
   sync_device_clock_with_ntp_server();
 
-  azure_pnp_init();
+  initSerialProf();
   azure_pnp_set_telemetry_frequency(TELEMETRY_FREQUENCY_IN_SECONDS);
 
   configure_azure_iot();
@@ -490,7 +478,8 @@ static void connect_to_wifi()
   if (connectByHtml.existDataFile()) {
     WiFi.mode(WIFI_STA);
     connectByHtml.updateListSSID();
-    //Serial.println(connectByHtml.resp);
+    Serial.println(connectByHtml.ssid_data_html);
+    Serial.println(connectByHtml.ssid_pass_data_html);
     WiFi.begin(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
     uint8_t cont = 0;
     while (WiFi.status() != WL_CONNECTED)
@@ -505,8 +494,8 @@ static void connect_to_wifi()
         uint8_t x=0;
         while(!readNFileValue()) {
           x++;
-          if(x>150){
-            Serial.print("x");
+          if(x>0xF0){
+            //Serial.print("Esperando dados para wifi!");
             x=0;
           }
         }
@@ -523,14 +512,11 @@ static void connect_to_wifi()
     updateConfWif(connectByHtml.ssid_data_html, connectByHtml.ssid_pass_data_html);
     connectByHtml.existDataFile();
     fw(1);
-    contInf = 0;
     LogInfo("Connecting to WIFI wifi_ssid %s", connectByHtml.ssid_data_html);
     LogInfo("WiFi connected, IP address: %s", WiFi.localIP().toString().c_str());
     Serial.println("");
-    saveIP(WiFi.localIP().toString());
   } else {
-    while (!connectByHtml.existDataFile());
-    //criar
+    Serial.println("##### ERROR ARQUIVOS INEXISTENTES #########");
   }
   delay(100);
 }
@@ -604,11 +590,7 @@ static esp_err_t esp_mqtt_event_handler(esp_mqtt_event_handle_t event)
     {
       LogError("azure_iot_mqtt_client_subscribe_completed failed.");
     }
-    contInf++;
-    if(!infSendfw3 && contInf==3) {
-      infSendfw3 = !infSendfw3;
-      fw(3); // fw 3 connected on azure
-    }
+    //fw(3); // fw 3 connected on azure
     break;
   case MQTT_EVENT_UNSUBSCRIBED:
     LogInfo("MQTT topic unsubscribed.");

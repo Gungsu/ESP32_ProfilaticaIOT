@@ -1,23 +1,17 @@
 #include "profProtocol.h"
+#include "htmlServer.h"
 
 HardwareSerial Serialprofisys(1);
-String myIP;
 
-enum {
-    calibracaofluxometro,
-    mudanca1,
-    mudanca2,
-    mudanca3,
-    lotepos
-};
+#define calibracaofluxometro 0
+#define mudanca1 1
+#define mudanca2 2
+#define mudanca3 3
+#define Lote 4
 
 void initSerialProf()
 {
     Serialprofisys.begin(9600, SERIAL_8N1, 27, 26);
-}
-
-void saveIP(String myIPreceveived) {
-    myIP = myIPreceveived;
 }
 
 void enviarResposta(char *cmd, char *arrayvl, uint16_t vl_leng)
@@ -26,13 +20,6 @@ void enviarResposta(char *cmd, char *arrayvl, uint16_t vl_leng)
     Serialprofisys.write(':');
     Serialprofisys.write(arrayvl,vl_leng-1);
     Serialprofisys.println();
-}
-
-void enviarResposta(char *cmd, String arrayvl)
-{
-    Serialprofisys.write(cmd);
-    Serialprofisys.write(':');
-    Serialprofisys.println(arrayvl);
 }
 
 void timestamp2Ser(time_t time)
@@ -194,18 +181,17 @@ void SerialProfisy::atualizarDadosParaAzure(){
     }
     else if (toCompar == "LO")
     {
-        strcpy(this->lote, readValueFJSON("lote").c_str());
-        Serial.print("Lote: ");     
-        Serial.println(lote);
-        enviarResposta("LO",lote,sizeof(lote));
+        Serial.print("Lote: ");
+        strcpy(lote, vl.c_str());
+        Serial.println(this->lote);
+        updateLote(lote + 1, sizeof(lote));
         this->existeValor = false;
     }
-    else if (toCompar == "IP")
+    else if (toCompar == "LS") //QUANDO PRECISAR SOLICITAR O VALOR DO LOTE
     {
-        Serial.print("IP: ");     
-        Serial.println(myIP);
-        enviarResposta("IP",myIP);
-        this->existeValor = false;
+        strcpy(lote, readValueFJSON("lote").c_str());
+        char ls[] = "LS";
+        enviarResposta(ls, lote, sizeof(lote));
     }
     else
     {
@@ -229,9 +215,9 @@ uint16_t SerialProfisy::azureReadAndSendprofsys(char *cmd, char *vle) {
     uint8_t pos;
     char cmdH[4] = {'\0'};
     int x;
-    for (int i = 0; i < numCmds; i++)
+    for (int i = 0; i < 5; i++) // Quantidade da LISTA DE COMANDOS DO profProtocol.h
     {
-        x = strcmp(cmdNameList[i], cmd);
+        x = strcmp(cmdNameList[i], cmd); //COMPARA COM LISTA DE COMANDOS DO profProtocol.h
         if (x == 0)
         {
             pos = uint8_t(i);
@@ -264,10 +250,10 @@ uint16_t SerialProfisy::azureReadAndSendprofsys(char *cmd, char *vle) {
             return 202;
             break;
 
-        case lotepos:
+        case Lote:
             strncpy(cmdH, "LO", sizeof(cmdH) - 1);
-            enviarResposta(cmdH, vle + 1, this->sizeVle(vle));
-            updateLote(vle+1,this->sizeVle(vle));
+            enviarResposta(cmdH, vle + 1, this->sizeVle(vle+1));
+            updateLote(vle + 1, this->sizeVle(vle + 1));
             return 202;
             break;
 
