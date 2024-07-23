@@ -50,10 +50,6 @@
 #define RESULT_OK 0
 #define RESULT_ERROR __LINE__
 
-/* --- Handling iot_config.h Settings --- */
-static const char *wifi_ssid = IOT_CONFIG_WIFI_SSID;
-static const char *wifi_password = IOT_CONFIG_WIFI_PASSWORD;
-
 /* --- Function Declarations --- */
 static void sync_device_clock_with_ntp_server();
 static void connect_to_wifi();
@@ -79,7 +75,25 @@ static bool send_device_info = true;
 static bool azure_initial_connect = false; // Turns true when ESP32 successfully connects to Azure IoT Central for the first time
 
 ConnectWifiByDataHtml connectByHtml;
+uint64_t delayToSendFWAzure, delayToSendFWAzureOLD;
+bool setTimeInit,sended,azConnected;
 
+void sendAzureConect(bool x = false) {
+  delayToSendFWAzure = millis();
+  if(x) {
+    delayToSendFWAzureOLD = millis();
+    //Serial.println("RESETOU");
+  }
+
+  if(!setTimeInit) {
+    delayToSendFWAzureOLD = millis();
+    setTimeInit = true;
+  }
+  if ((delayToSendFWAzure - delayToSendFWAzureOLD) > 10000 && !sended && azConnected) {
+    fw(3);
+    sended=true;
+  }
+}
 /* --- MQTT Interface Functions --- */
 /*
  * These functions are used by Azure IoT to interact with whatever MQTT client used by the sample
@@ -182,7 +196,6 @@ static int mqtt_client_subscribe_function(
     mqtt_qos_t qos)
 {
   LogInfo("MQTT client subscribing to '%.*s'", az_span_size(topic), az_span_ptr(topic));
-
   // As per documentation, `topic` always ends with a null-terminator.
   // esp_mqtt_client_subscribe returns the packet id or negative on error already, so no conversion
   // is needed.
@@ -200,6 +213,8 @@ static int mqtt_client_publish_function(
     mqtt_message_t *mqtt_message)
 {
   LogInfo("MQTT client publishing to '%s'", az_span_ptr(mqtt_message->topic));
+
+  if(!sended) sendAzureConect(true);
 
   int mqtt_result = esp_mqtt_client_publish(
       (esp_mqtt_client_handle_t)mqtt_client_handle,
@@ -368,7 +383,7 @@ void setup()
 {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   Serial.begin(SERIAL_LOGGER_BAUD_RATE);
-  //while (!connectWifibySerial())
+  initSerialProf();
 
   set_logging_function(logging_function);
   
@@ -377,7 +392,6 @@ void setup()
   connect_to_wifi();
   sync_device_clock_with_ntp_server();
 
-  initSerialProf();
   azure_pnp_set_telemetry_frequency(TELEMETRY_FREQUENCY_IN_SECONDS);
 
   configure_azure_iot();
@@ -431,8 +445,9 @@ void loop()
     default:
       break;
     }
-
     azure_iot_do_work(&azure_iot);
+    if (!sended)
+      sendAzureConect(false);
   }
 }
 
@@ -475,6 +490,7 @@ static void connect_to_wifi()
   WifiApSTA();
   htmlSetup();
   delay(500);
+  fw(2);
   if (connectByHtml.existDataFile()) {
     WiFi.mode(WIFI_STA);
     connectByHtml.updateListSSID();
@@ -484,18 +500,18 @@ static void connect_to_wifi()
     uint8_t cont = 0;
     while (WiFi.status() != WL_CONNECTED)
     {
+      sended = false;
       send_device_info = false;
       delay(500);
       Serial.print(WiFi.status());
       if (cont > 15 && cont < 25)
       {
-        fw(2);
         WifiApSTA();
         uint8_t x=0;
         while(!readNFileValue()) {
           x++;
           if(x>0xF0){
-            //Serial.print("Esperando dados para wifi!");
+            //Serial.print("Esperando dados para conectar no wifi!");
             x=0;
           }
         }
@@ -567,6 +583,9 @@ static esp_err_t esp_mqtt_event_handler(esp_mqtt_event_handle_t event)
     break;
   case MQTT_EVENT_CONNECTED:
     LogInfo("MQTT client connected (session_present=%d).", event->session_present);
+    azConnected = true;
+    if (!sended)
+      sendAzureConect(true);
 
     if (azure_iot_mqtt_client_connected(&azure_iot) != 0)
     {
@@ -585,18 +604,22 @@ static esp_err_t esp_mqtt_event_handler(esp_mqtt_event_handle_t event)
     break;
   case MQTT_EVENT_SUBSCRIBED:
     LogInfo("MQTT topic subscribed (message id=%d).", event->msg_id);
+    if (!sended)
+      sendAzureConect(true);
 
     if (azure_iot_mqtt_client_subscribe_completed(&azure_iot, event->msg_id) != 0)
     {
       LogError("azure_iot_mqtt_client_subscribe_completed failed.");
     }
-    //fw(3); // fw 3 connected on azure
+
     break;
   case MQTT_EVENT_UNSUBSCRIBED:
     LogInfo("MQTT topic unsubscribed.");
     break;
   case MQTT_EVENT_PUBLISHED:
     LogInfo("MQTT event MQTT_EVENT_PUBLISHED");
+    if (!sended)
+      sendAzureConect(true);
 
     if (azure_iot_mqtt_client_publish_completed(&azure_iot, event->msg_id) != 0)
     {
@@ -623,6 +646,8 @@ static esp_err_t esp_mqtt_event_handler(esp_mqtt_event_handle_t event)
     break;
   case MQTT_EVENT_BEFORE_CONNECT:
     LogInfo("MQTT client connecting.");
+    if (!sended)
+      sendAzureConect(true);
     break;
   default:
     LogError("MQTT event UNKNOWN.");

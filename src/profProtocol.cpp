@@ -3,11 +3,15 @@
 
 HardwareSerial Serialprofisys(1);
 
-#define calibracaofluxometro 0
-#define mudanca1 1
-#define mudanca2 2
-#define mudanca3 3
-#define Lote 4
+uint8_t fwVar;
+
+enum {
+    calibracaofluxometro,
+    mudanca1,
+    mudanca2,
+    mudanca3,
+    Lote
+};
 
 void initSerialProf()
 {
@@ -26,25 +30,26 @@ void timestamp2Ser(time_t time)
 {
     struct tm *lt = localtime(&time);
     char str[32];
-    delay(5);
+    delay(20);
     Serialprofisys.print("TS:");
-    delay(5);
+    delay(20);
     strftime(str, sizeof str, "%Y.", lt);
     Serialprofisys.print(str);
-    delay(5);
+    delay(20);
     strftime(str, sizeof str, "%m.%d", lt);
     Serialprofisys.print(str);
-    delay(5);
+    delay(20);
     strftime(str, sizeof str, ":%H.%M", lt);
     Serialprofisys.print(str);
-    delay(5);
+    delay(20);
     strftime(str, sizeof str, ".%S", lt);
     Serialprofisys.println(str);
+    delay(20);
     Serial.println(time);
 }
 
 void fw(uint8_t x)
-{ // FAULT CONEXOES WIFI AZURE
+{ 
     if (x == 0)
     {
         char toSend[] = "FW:0\n";
@@ -65,13 +70,14 @@ void fw(uint8_t x)
         char toSend[] = "FW:3\n";
         Serialprofisys.print(toSend);
     } // AZURE CONNECTED
+    fwVar = x;
 }
 
 void SerialProfisy::decodeDadosSerial()
 {
     for (uint16_t i = 0; i < this->lengArray; i++)
     {
-        if (this->arraytotal[i] != 0x0A || this->arraytotal[i] == 0x00 || this->arraytotal[i] > 0xA9)
+        if (this->arraytotal[i] == 0x0A || this->arraytotal[i] == 0x00 || this->arraytotal[i] > 0xA9)
         {
             this->lengArray = i;
             break;
@@ -83,9 +89,11 @@ void SerialProfisy::decodeDadosSerial()
     while (pch != NULL)
     {
         this->value[cont] = pch;
+        //Serial.println(value[cont]);
         pch = strtok(NULL, ":\n"); // SS
         cont++;
     }
+    //Serial.println(arraytotal);
     this->values = cont;
 }
 
@@ -111,8 +119,8 @@ bool SerialProfisy::lerDadosSerial()
             {
                 this->contLengRxSerialProf = 0;
             }
-            this->existeValor = true;
-            return false;
+            //this->existeValor = true;
+            //return false;
         }
     }
     this->existeValor = false;
@@ -184,7 +192,7 @@ void SerialProfisy::atualizarDadosParaAzure(){
         Serial.print("Lote: ");
         strcpy(lote, vl.c_str());
         Serial.println(this->lote);
-        updateLote(lote + 1, sizeof(lote));
+        updateLote(lote, sizeof(lote));
         this->existeValor = false;
     }
     else if (toCompar == "LS") //QUANDO PRECISAR SOLICITAR O VALOR DO LOTE

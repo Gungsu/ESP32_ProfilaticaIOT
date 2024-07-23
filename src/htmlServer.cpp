@@ -42,7 +42,7 @@ String readFile(fs::FS &fs, const char *path)
 
 void writeFile(fs::FS &fs, const char *path, const char *message)
 {
-    Serial.printf("Writing file: %s\r\n", path);
+    //Serial.printf("Writing file: %s\r\n", path);
     file = fs.open(path, "w");
     if (!file)
     {
@@ -236,7 +236,8 @@ void serializeJson(fs::FS &fs, const char *path)
     strcpy(text,allthetext.c_str());
     allthetext = "";
     writeFile(LittleFS, path, text);
-    Serial.print(text);
+    
+    //Serial.print(text);
 }
 
 void ConnectWifiByDataHtml::readDeviceConf()

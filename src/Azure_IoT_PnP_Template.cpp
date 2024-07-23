@@ -144,6 +144,9 @@ int azure_pnp_send_telemetry(azure_iot_t *azure_iot) // serial
 
         last_telemetry_send_time = now;
         leituraProfsys.sendToazure = false;
+        
+        timestamp2Ser(now);
+        fw(3);
 
         if (generate_telemetry_payload(data_buffer, DATA_BUFFER_SIZE, &payload_size) != RESULT_OK)
         {
