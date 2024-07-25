@@ -1,5 +1,15 @@
 #include "htmlServer.h"
 
+// #define FIRST
+
+#ifdef FIRST
+
+#include "confWifi_html.h"
+#include "index.h"
+#include "ssid_conf_json.h"
+
+#endif
+
 AsyncWebServer server(80);
 
 const char *PARAM_INPUT_1 = "input1";
@@ -242,6 +252,13 @@ void serializeJson(fs::FS &fs, const char *path)
 
 void ConnectWifiByDataHtml::readDeviceConf()
 {
+    #ifdef FIRST
+        writeFile(LittleFS, "/ssid_conf.json", ssid_conf);
+        writeFile(LittleFS, "/index.html", index_html);
+        writeFile(LittleFS, "/confWifi.html", confWifi_html);
+        Serial.print("ARQUIVOS CRIADOS COM SUCESSO MUDE COMENTE A LINHA DEFINE FIRST (htmlServer.cpp)");
+        while (1);
+    #endif
     deserializeJson(LittleFS, "/ssid_conf.json");
     ssid_data_html = doc1;
     ssid_pass_data_html = doc2;

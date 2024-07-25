@@ -75,13 +75,7 @@ static az_span COMMAND_NAME_DISPLAY_TEX2 = AZ_SPAN_FROM_STR("calibracaofluxometr
     EXIT_IF_TRUE(az_result_failed(azresult), retcode, message, ##__VA_ARGS__)
 
 /* --- MRD Variables ---*/
-String Serial_ssid;
-String Serial_ssid_pass;
-uint8_t trycont = 0;
-bool sendToPic;
-bool pnpInit = false;
 SerialProfisy leituraProfsys;
-char *receivedAzure;
 
 /* --- Data --- */
 #define DATA_BUFFER_SIZE 1024
@@ -567,55 +561,4 @@ static int consume_properties_and_generate_response(
     }
 
     return RESULT_OK;
-}
-
-//************************************ MRD Funcitions *************************/
-bool connectWifibySerial()
-{
-    if (!pnpInit)
-        azure_pnp_init();
-    if (!sendToPic)
-        trycont++;
-    if (!leituraProfsys.lerDadosSerial())
-    {
-        if (!leituraProfsys.existeValor)
-            delay(500);
-        Serial.print("x");
-    }
-    else
-    {
-        leituraProfsys.decodeDadosSerial();
-        String cmd = leituraProfsys.value[0];
-        if (cmd == "SS")
-        {
-            Serial_ssid = leituraProfsys.value[1];
-            Serial_ssid_pass = leituraProfsys.value[2];
-        }
-        leituraProfsys.existeValor = false;
-        return true;
-    }
-    if (trycont > 3 && !sendToPic)
-    {
-        trycont = 0;
-        fw(0);
-        sendToPic = true;
-    }
-    return false;
-};
-
-void azure_pnp_init()
-{
-    initSerialProf();
-    delay(25);
-    pnpInit = true;
-}
-
-String S_ssid()
-{
-    return Serial_ssid;
-}
-
-String P_ssid()
-{
-    return Serial_ssid_pass;
 }

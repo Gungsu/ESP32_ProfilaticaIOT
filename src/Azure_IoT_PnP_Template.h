@@ -108,9 +108,4 @@ int azure_pnp_handle_properties_update(
     az_span properties,
     uint32_t request_id);
 
-String S_ssid();
-String P_ssid();
-
-bool connectWifibySerial();
-
 #endif // AZURE_IOT_PNP_TEMPLATE_H
