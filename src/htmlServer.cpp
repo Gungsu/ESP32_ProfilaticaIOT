@@ -1,15 +1,5 @@
 #include "htmlServer.h"
 
-// #define FIRST
-
-#ifdef FIRST
-
-#include "confWifi_html.h"
-#include "index.h"
-#include "ssid_conf_json.h"
-
-#endif
-
 AsyncWebServer server(80);
 
 const char *PARAM_INPUT_1 = "input1";
@@ -53,7 +43,7 @@ String readFile(fs::FS &fs, const char *path)
 void writeFile(fs::FS &fs, const char *path, const char *message)
 {
     //Serial.printf("Writing file: %s\r\n", path);
-    file = fs.open(path, "w");
+    File file = fs.open(path, "w");
     if (!file)
     {
         Serial.println("- failed to open file for writing");
@@ -88,7 +78,7 @@ String editFile(fs::FS &fs, const char *path)
 }
 
 void htmlSetup() {
-    html = readFile(LittleFS, "/index.html");
+    html = readFile(SPIFFS, "/index.html");
 
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
                   { request->send(200, "text/html", html); });
@@ -99,7 +89,7 @@ void htmlSetup() {
                   String inputMessage;
                   String inputParam;
                   char payload[256];
-                  deserializeJson(LittleFS, "/ssid_conf.json");
+                  deserializeJson(SPIFFS, "/ssid_conf.json");
                   // GET input1 value on <ESP_IP>/get?input1=<inputMessage>
                   if (request->hasParam(PARAM_INPUT_1))
                   {
@@ -127,7 +117,7 @@ void htmlSetup() {
                       Serial.print(" ");
                       Serial.println(inputParam);
                       doc7 = inputMessage;
-                      serializeJson(LittleFS, "/ssid_conf.json");
+                      serializeJson(SPIFFS, "/ssid_conf.json");
                       WiFi.disconnect();
                   }
                   else if (request->hasParam(PARAM_INPUT_4))
@@ -145,7 +135,7 @@ void htmlSetup() {
                       Serial.println(inputParam);
                       doc2 = inputMessage; //PASS
                       doc3 = "true";
-                      serializeJson(LittleFS, "/ssid_conf.json");
+                      serializeJson(SPIFFS, "/ssid_conf.json");
                       WiFi.disconnect();
                   }
                   else
@@ -158,11 +148,11 @@ void htmlSetup() {
               });
     server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                  html = editFile(LittleFS, "/confWifi.html");
+                  html = editFile(SPIFFS, "/confWifi.html");
                   request->send(200, "text/html", html); });
     server.on("/azure", HTTP_GET, [](AsyncWebServerRequest *request)
               { 
-                html = readFile(LittleFS, "/index.html");
+                html = readFile(SPIFFS, "/index.html");
                 request->send(200, "text/html", html); });
 
     server.onNotFound(notFound);
@@ -245,35 +235,28 @@ void serializeJson(fs::FS &fs, const char *path)
     allthetext += doc6 + "\",\n\"lote\": \""+doc7+"\",\n}\r\n";
     strcpy(text,allthetext.c_str());
     allthetext = "";
-    writeFile(LittleFS, path, text);
-    
+    writeFile(SPIFFS, path, text);
+
     //Serial.print(text);
 }
 
 void ConnectWifiByDataHtml::readDeviceConf()
 {
-    #ifdef FIRST
-        writeFile(LittleFS, "/ssid_conf.json", ssid_conf);
-        writeFile(LittleFS, "/index.html", index_html);
-        writeFile(LittleFS, "/confWifi.html", confWifi_html);
-        Serial.print("ARQUIVOS CRIADOS COM SUCESSO MUDE COMENTE A LINHA DEFINE FIRST (htmlServer.cpp)");
-        while (1);
-    #endif
-    deserializeJson(LittleFS, "/ssid_conf.json");
-    ssid_data_html = doc1;
-    ssid_pass_data_html = doc2;
-    nFile = doc3;
-    scope = doc4;
-    devID = doc5;
-    devKey = doc6;
-    loteSave = doc7;
+        deserializeJson(SPIFFS, "/ssid_conf.json");
+        ssid_data_html = doc1;
+        ssid_pass_data_html = doc2;
+        nFile = doc3;
+        scope = doc4;
+        devID = doc5;
+        devKey = doc6;
+        loteSave = doc7;
 }
 
 bool ConnectWifiByDataHtml::existDataFile()
 {
-    if (consultExist(LittleFS, "/ssid_conf.json"))
+    if (consultExist(SPIFFS, "/ssid_conf.json"))
     {
-        deserializeJson(LittleFS, "/ssid_conf.json");
+        deserializeJson(SPIFFS, "/ssid_conf.json");
         ssid_data_html = doc1;
         ssid_pass_data_html = doc2;
         return true;
@@ -289,7 +272,7 @@ void updateConfWif(String ssid, String pass) {
     doc1 = ssid;
     doc2 = pass;
     doc3 = "false";
-    serializeJson(LittleFS, "/ssid_conf.json");
+    serializeJson(SPIFFS, "/ssid_conf.json");
     delay(50);
 }
 
@@ -302,7 +285,7 @@ bool readNFileValue() { //ATUALIZAR QUANDO CHAMAR
 
 String readValueFJSON(String val)
 {
-    deserializeJson(LittleFS, "/ssid_conf.json");
+    deserializeJson(SPIFFS, "/ssid_conf.json");
     if (val == "ssid")
     {
         return doc1;
@@ -341,7 +324,7 @@ void updateLote(char *lote, uint16_t lenght)
     strncpy(nLote, lote, lenght);
     doc7 = String(nLote);
     char payload[256];
-    serializeJson(LittleFS, "/ssid_conf.json");
+    serializeJson(SPIFFS, "/ssid_conf.json");
     delay(50);
 }
 

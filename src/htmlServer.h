@@ -1,10 +1,10 @@
 #ifndef HTMLSERVER
 #define HTMLSERVER
 
+#include "FS.h"
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "FS.h"
-#include <LittleFS.h>
+#include <SPIFFS.h>
 
 #define SERVER_HOST_NAME "esp_server"
 
@@ -24,13 +24,11 @@ class ConnectWifiByDataHtml {
         void readDeviceConf();
         ConnectWifiByDataHtml()
         {
-            LittleFS.begin(true);
+            SPIFFS.begin(true);
         }
 
     private:
         bool consultExist(fs::FS &fs, const char *path);
-    
-    
 };
 
 void notFound(AsyncWebServerRequest *request);
