@@ -501,7 +501,7 @@ static void connect_to_wifi()
     while (WiFi.status() != WL_CONNECTED)
     {
       sended = false;
-      send_device_info = false;
+      send_device_info = true;
       delay(500);
       Serial.print(WiFi.status());
       if (cont > 15 && cont < 25)
