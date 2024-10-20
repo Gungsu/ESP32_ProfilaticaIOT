@@ -421,15 +421,16 @@ void loop()
     {
     case azure_iot_connected:
       azure_initial_connect = true;
-
       if (send_device_info)
       {
         (void)azure_pnp_send_device_info(&azure_iot, properties_request_id++);
         send_device_info = false;
       }
-      else if (azure_pnp_send_telemetry(&azure_iot) != 0)
-      {
-        LogError("Failed sending telemetry.");
+      else {
+        if (azure_pnp_send_telemetry(&azure_iot) != 0)
+        {
+          LogError("Failed sending telemetry.");
+        }
       }
       break;
 
@@ -443,6 +444,8 @@ void loop()
       break;
 
     default:
+      // Serial.print("Default: ");
+      // Serial.println(azure_iot_get_status(&azure_iot));
       break;
     }
     azure_iot_do_work(&azure_iot);
@@ -479,7 +482,7 @@ static void sync_device_clock_with_ntp_server()
 
 void WifiApSTA() {
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP("PROFSYS_01", "deumaoito", 10, false, 1);
+  WiFi.softAP("PROFSYS_02", "deumaoito", 10, false, 1);
   Serial.print("AP Created with IP Gateway ");
   Serial.println(WiFi.softAPIP());
 }

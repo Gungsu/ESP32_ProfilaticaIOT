@@ -175,14 +175,12 @@ int azure_pnp_send_device_info(azure_iot_t *azure_iot, uint32_t request_id)
     int result;
     size_t length;
 
-    result = generate_device_info_payload(
-        &azure_iot->iot_hub_client, data_buffer, DATA_BUFFER_SIZE, &length);
+    result = generate_device_info_payload(&azure_iot->iot_hub_client, data_buffer, DATA_BUFFER_SIZE, &length);
     EXIT_IF_TRUE(result != RESULT_OK, RESULT_ERROR, "Failed generating telemetry payload.");
 
-    result = azure_iot_send_properties_update(
-        azure_iot, request_id, az_span_create(data_buffer, length));
+    result = azure_iot_send_properties_update(azure_iot, request_id, az_span_create(data_buffer, length));
     EXIT_IF_TRUE(result != RESULT_OK, RESULT_ERROR, "Failed sending reported properties update.");
-    leituraProfsys.sendToazure = false;
+
     return RESULT_OK;
 }
 
@@ -331,24 +329,6 @@ static int generate_device_info_payload(
     az_span payload_buffer_span = az_span_create(payload_buffer, payload_buffer_size);
     az_span json_span;
 
-    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(TELEMETRY_PROP_NAME_CALIBBOMBA));
-    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding calibracao bomba property name to telemetry payload.");
-    rc = az_json_writer_append_double(&jw, leituraProfsys.calibbomba, DOUBLE_DECIMAL_PLACE_DIGITS);
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding calibracao bomba property value to telemetry payload.");
-
-    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(TELEMETRY_PROP_NAME_VOLUMEQUIMICO));
-    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding volume_de_quimico property name to telemetry payload.");
-    rc = az_json_writer_append_double(&jw, leituraProfsys.volume_de_quimico, DOUBLE_DECIMAL_PLACE_DIGITS);
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding volume_de_quimico property value to telemetry payload.");
-
-    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(TELEMETRY_PROP_NAME_OPCAODOSAGEM));
-    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding opcao_de_dosagem property name to telemetry payload.");
-    rc = az_json_writer_append_double(&jw, leituraProfsys.opcao_de_dosagem, DOUBLE_DECIMAL_PLACE_DIGITS);
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding opcao_de_dosagem property value to telemetry payload.");
-
     rc = az_json_writer_init(&jw, payload_buffer_span, NULL);
     EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed initializing json writer for telemetry.");
 
@@ -359,23 +339,23 @@ static int generate_device_info_payload(
         hub_client, &jw, AZ_SPAN_FROM_STR(SAMPLE_DEVICE_INFORMATION_NAME));
     EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed writting component name.");
 
-    rc = az_json_writer_append_property_name(
-        &jw, AZ_SPAN_FROM_STR(SAMPLE_MANUFACTURER_PROPERTY_NAME));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_MANUFACTURER_PROPERTY_NAME to payload.");
+    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_MANUFACTURER_PROPERTY_NAME));
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_MANUFACTURER_PROPERTY_NAME to payload.");
     rc = az_json_writer_append_string(&jw, AZ_SPAN_FROM_STR(SAMPLE_MANUFACTURER_PROPERTY_VALUE));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_MANUFACTURER_PROPERTY_VALUE to payload. ");
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_MANUFACTURER_PROPERTY_VALUE to payload. ");
 
     rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_MODEL_PROPERTY_NAME));
     EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_MODEL_PROPERTY_NAME to payload.");
     rc = az_json_writer_append_string(&jw, AZ_SPAN_FROM_STR(SAMPLE_MODEL_PROPERTY_VALUE));
     EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_MODEL_PROPERTY_VALUE to payload. ");
 
-    rc = az_json_writer_append_property_name(
-        &jw, AZ_SPAN_FROM_STR(SAMPLE_SOFTWARE_VERSION_PROPERTY_NAME));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_SOFTWARE_VERSION_PROPERTY_NAME to payload.");
+    // rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_TOTAL_PROPERTY_REFIL_VALUE));
+    // EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_MODEL_PROPERTY_NAME to payload.");
+    // rc = az_json_writer_append_int32(&jw, serverhtml.confEq.refil_vol);
+    // EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_MODEL_PROPERTY_VALUE to payload. ");
+
+    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_SOFTWARE_VERSION_PROPERTY_NAME));
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_SOFTWARE_VERSION_PROPERTY_NAME to payload.");
     rc = az_json_writer_append_string(&jw, AZ_SPAN_FROM_STR(SAMPLE_VERSION_PROPERTY_VALUE));
     EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_VERSION_PROPERTY_VALUE to payload. ");
 
@@ -384,40 +364,25 @@ static int generate_device_info_payload(
     rc = az_json_writer_append_string(&jw, AZ_SPAN_FROM_STR(SAMPLE_OS_NAME_PROPERTY_VALUE));
     EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_OS_NAME_PROPERTY_VALUE to payload. ");
 
-    rc = az_json_writer_append_property_name(
-        &jw, AZ_SPAN_FROM_STR(SAMPLE_PROCESSOR_ARCHITECTURE_PROPERTY_NAME));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_PROCESSOR_ARCHITECTURE_PROPERTY_NAME to payload.");
+    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_PROCESSOR_ARCHITECTURE_PROPERTY_NAME));
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_PROCESSOR_ARCHITECTURE_PROPERTY_NAME to payload.");
     rc = az_json_writer_append_string(&jw, AZ_SPAN_FROM_STR(SAMPLE_ARCHITECTURE_PROPERTY_VALUE));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_ARCHITECTURE_PROPERTY_VALUE to payload. ");
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_ARCHITECTURE_PROPERTY_VALUE to payload. ");
 
-    rc = az_json_writer_append_property_name(
-        &jw, AZ_SPAN_FROM_STR(SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_NAME));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_NAME to payload.");
-    rc = az_json_writer_append_string(
-        &jw, AZ_SPAN_FROM_STR(SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_VALUE));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_VALUE to payload. ");
+    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_NAME));
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_NAME to payload.");
+    rc = az_json_writer_append_string(&jw, AZ_SPAN_FROM_STR(SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_VALUE));
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_PROCESSOR_MANUFACTURER_PROPERTY_VALUE to payload. ");
 
-    rc = az_json_writer_append_property_name(
-        &jw, AZ_SPAN_FROM_STR(SAMPLE_TOTAL_STORAGE_PROPERTY_NAME));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_STORAGE_PROPERTY_NAME to payload.");
-    rc = az_json_writer_append_double(
-        &jw, SAMPLE_TOTAL_STORAGE_PROPERTY_VALUE, DOUBLE_DECIMAL_PLACE_DIGITS);
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_STORAGE_PROPERTY_VALUE to payload. ");
+    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_TOTAL_STORAGE_PROPERTY_NAME));
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_STORAGE_PROPERTY_NAME to payload.");
+    rc = az_json_writer_append_double(&jw, SAMPLE_TOTAL_STORAGE_PROPERTY_VALUE, DOUBLE_DECIMAL_PLACE_DIGITS);
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_STORAGE_PROPERTY_VALUE to payload. ");
 
-    rc = az_json_writer_append_property_name(
-        &jw, AZ_SPAN_FROM_STR(SAMPLE_TOTAL_MEMORY_PROPERTY_NAME));
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_MEMORY_PROPERTY_NAME to payload.");
-    rc = az_json_writer_append_double(
-        &jw, SAMPLE_TOTAL_MEMORY_PROPERTY_VALUE, DOUBLE_DECIMAL_PLACE_DIGITS);
-    EXIT_IF_AZ_FAILED(
-        rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_MEMORY_PROPERTY_VALUE to payload. ");
+    rc = az_json_writer_append_property_name(&jw, AZ_SPAN_FROM_STR(SAMPLE_TOTAL_MEMORY_PROPERTY_NAME));
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_MEMORY_PROPERTY_NAME to payload.");
+    rc = az_json_writer_append_double(&jw, SAMPLE_TOTAL_MEMORY_PROPERTY_VALUE, DOUBLE_DECIMAL_PLACE_DIGITS);
+    EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed adding SAMPLE_TOTAL_MEMORY_PROPERTY_VALUE to payload. ");
 
     rc = az_iot_hub_client_properties_writer_end_component(hub_client, &jw);
     EXIT_IF_AZ_FAILED(rc, RESULT_ERROR, "Failed closing component object.");

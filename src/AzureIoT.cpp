@@ -616,23 +616,17 @@ int azure_iot_send_properties_update(azure_iot_t* azure_iot, uint32_t request_id
 
   azr = az_span_u32toa(request_id_span, request_id, &data_buffer);
   EXIT_IF_TRUE(az_result_failed(azr), RESULT_ERROR, "Failed generating Twin request id.");
-  request_id_span = az_span_slice(
-      request_id_span, 0, az_span_size(request_id_span) - az_span_size(data_buffer));
+  request_id_span = az_span_slice(request_id_span, 0, az_span_size(request_id_span) - az_span_size(data_buffer));
 
   azr = az_iot_hub_client_properties_get_reported_publish_topic(
-      &azure_iot->iot_hub_client,
-      request_id_span,
-      (char*)az_span_ptr(data_buffer),
-      az_span_size(data_buffer),
-      &topic_length);
+      &azure_iot->iot_hub_client, request_id_span, (char *)az_span_ptr(data_buffer), az_span_size(data_buffer), &topic_length);
   EXIT_IF_AZ_FAILED(azr, RESULT_ERROR, "Failed to get the reported properties publish topic");
 
   mqtt_message.topic = az_span_slice(data_buffer, 0, topic_length);
   mqtt_message.payload = message;
   mqtt_message.qos = mqtt_qos_at_most_once;
 
-  int packet_id = azure_iot->config->mqtt_client_interface.mqtt_client_publish(
-      azure_iot->mqtt_client_handle, &mqtt_message);
+  int packet_id = azure_iot->config->mqtt_client_interface.mqtt_client_publish(azure_iot->mqtt_client_handle, &mqtt_message);
   EXIT_IF_TRUE(packet_id < 0, RESULT_ERROR, "Failed publishing to reported properties topic.");
 
   return RESULT_OK;
