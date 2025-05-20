@@ -498,7 +498,6 @@ static void connect_to_wifi()
   WifiApSTA();
   htmlSetup();
   delay(500);
-  fw(2);
   if (connectByHtml.existDataFile()) {
     WiFi.mode(WIFI_STA);
     connectByHtml.updateListSSID();
