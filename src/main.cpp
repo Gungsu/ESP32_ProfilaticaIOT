@@ -75,8 +75,8 @@ static bool send_device_info = true;
 static bool azure_initial_connect = false; // Turns true when ESP32 successfully connects to Azure IoT Central for the first time
 
 ConnectWifiByDataHtml connectByHtml;
-uint64_t delayToSendFWAzure, delayToSendFWAzureOLD;
-bool setTimeInit,sended,azConnected;
+uint64_t delayToSendFWAzure, delayToSendFWAzureOLD, timeinAPmode, timeinAPmodeStart;
+bool setTimeInit,sended,azConnected,bool_APmode;
 
 void sendAzureConect(bool x = false) {
   delayToSendFWAzure = millis();
@@ -386,7 +386,7 @@ void setup()
   initSerialProf();
 
   set_logging_function(logging_function);
-  
+
   connectByHtml.readDeviceConf();
 
   connect_to_wifi();
@@ -417,6 +417,7 @@ void loop()
   }
   else
   {
+    bool_APmode = false;
     switch (azure_iot_get_status(&azure_iot))
     {
     case azure_iot_connected:
@@ -425,6 +426,7 @@ void loop()
       {
         (void)azure_pnp_send_device_info(&azure_iot, properties_request_id++);
         send_device_info = false;
+        LogInfo("#### Sending device info.");
       }
       else {
         if (azure_pnp_send_telemetry(&azure_iot) != 0)
@@ -485,6 +487,9 @@ void WifiApSTA() {
   WiFi.softAP("PROFSYS_02", "deumaoito", 10, false, 1);
   Serial.print("AP Created with IP Gateway ");
   Serial.println(WiFi.softAPIP());
+  Serial.println("MODO ACCESS POINT");
+  bool_APmode = true;
+  timeinAPmodeStart = millis();
 }
 
 static void connect_to_wifi()
@@ -514,8 +519,15 @@ static void connect_to_wifi()
         while(!readNFileValue()) {
           x++;
           if(x>0xF0){
-            //Serial.print("Esperando dados para conectar no wifi!");
             x=0;
+            if (bool_APmode && (millis() - timeinAPmodeStart) > 120000)
+            {
+              bool_APmode = false;
+              Serial.println("SAINDO MODO ACCESS POINT");
+              ESP.restart();
+              x = 0xF1;
+            }
+            //Serial.print("Esperando dados para conectar no wifi!");
           }
         }
         connectByHtml.existDataFile();
